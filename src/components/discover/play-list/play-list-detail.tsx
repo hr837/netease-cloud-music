@@ -1,26 +1,26 @@
-import React from "react";
-import { PlayListService } from "~/services/playlist.service";
-import { RequestParams } from "~/core/http";
-import styled from "styled-components";
-import { Icon } from "antd";
-import { tenThoursand } from "~/shared/utils/common";
-import { Consumer } from "reto";
-import { RouterStore } from "~/store/router.store";
+import React from "react"
+import { PlayListService } from "~/services/playlist.service"
+import { RequestParams } from "~/core/http"
+import styled from "styled-components"
+import { Icon } from "antd"
+import { tenThoursand } from "~/shared/utils/common"
+import { Consumer } from "reto"
+import { RouterStore } from "~/store/router.store"
 
 type DetailState = {
-  playDataSet: any[];
-  pageIndex: number;
-};
+  playDataSet: any[]
+  pageIndex: number
+}
 
 const components = {
   Wrapper: styled.div`
-    margin: 20px 0;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 20px;
   `,
   Block: styled.div`
     position: relative;
     width: 180px;
-    margin: 10px 0;
 
     &:hover {
       cursor: pointer;
@@ -57,42 +57,39 @@ const components = {
     .play-list-name {
     }
   `
-};
+}
 
-export default class PlayListDetail extends React.Component<
-  { tag: string },
-  DetailState
-> {
+export default class PlayListDetail extends React.Component<{ tag: string }, DetailState> {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       playDataSet: [],
       pageIndex: 0
-    };
+    }
   }
 
-  private playlistService = new PlayListService();
+  private playlistService = new PlayListService()
 
   public componentDidMount() {
-    this.queryPlayList();
+    this.queryPlayList()
   }
 
   public componentDidUpdate(prevProps) {
     if (prevProps.tag !== this.props.tag) {
-      this.queryPlayList();
+      this.queryPlayList()
     }
   }
 
   public render() {
-    if (!this.props.tag) return <components.Wrapper></components.Wrapper>;
+    if (!this.props.tag) return <components.Wrapper></components.Wrapper>
 
     return (
-      <components.Wrapper className="flex-row">
+      <components.Wrapper>
         {this.state.playDataSet.map((item, index) => (
           <Block
             id={item.id}
-            key={item.id}
+            key={index}
             pic={item.coverImgUrl}
             name={item.name}
             playCount={item.playCount}
@@ -100,7 +97,7 @@ export default class PlayListDetail extends React.Component<
           ></Block>
         ))}
       </components.Wrapper>
-    );
+    )
   }
 
   private queryPlayList() {
@@ -109,22 +106,22 @@ export default class PlayListDetail extends React.Component<
         new RequestParams({
           cat: this.props.tag,
           order: "hot",
-          limit: 10
+          limit: 12
         })
       )
       .subscribe(data => {
-        this.setState({ playDataSet: data.playlists });
-      });
+        this.setState({ playDataSet: data.playlists })
+      })
   }
 }
 
 type BlockProp = {
-  id: number;
-  pic: string;
-  name: string;
-  nickName: string;
-  playCount: number;
-};
+  id: number
+  pic: string
+  name: string
+  nickName: string
+  playCount: number
+}
 
 class Block extends React.Component<BlockProp> {
   public render() {
@@ -133,7 +130,7 @@ class Block extends React.Component<BlockProp> {
         {routerStore => (
           <components.Block
             onClick={() => {
-              routerStore.history.push(`/detail/song-list/${this.props.id}`);
+              routerStore.history.push(`/detail/song-list/${this.props.id}`)
             }}
           >
             <img src={this.props.pic} className="img" />
@@ -149,6 +146,6 @@ class Block extends React.Component<BlockProp> {
           </components.Block>
         )}
       </Consumer>
-    );
+    )
   }
 }

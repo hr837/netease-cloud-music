@@ -4,17 +4,17 @@ const {
   addLessLoader,
   addWebpackAlias,
   addDecoratorsLegacy
-} = require("customize-cra");
+} = require("customize-cra")
 
-const path = require("path");
+const path = require("path")
 function setWebpackConfig() {
   // build时设置publicPath
   return config => {
     if (process.env.BROWSER !== "none" && process.env.REACT_APP_BASEHREF) {
-      config.output.publicPath = `${process.env.REACT_APP_BASEHREF||""}/`;
+      config.output.publicPath = `${process.env.REACT_APP_BASEHREF || ""}/`
     }
-    return config;
-  };
+    return config
+  }
 }
 
 module.exports = override(
@@ -31,4 +31,4 @@ module.exports = override(
   addWebpackAlias({
     "~": path.resolve(__dirname, "src")
   })
-);
+)
