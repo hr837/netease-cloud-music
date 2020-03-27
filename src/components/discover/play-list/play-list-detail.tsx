@@ -6,6 +6,7 @@ import { Icon } from "antd"
 import { tenThoursand } from "~/shared/utils/common"
 import { Consumer } from "reto"
 import { RouterStore } from "~/store/router.store"
+import { Subscription } from "rxjs"
 
 type DetailState = {
   playDataSet: any[]
@@ -70,6 +71,7 @@ export default class PlayListDetail extends React.Component<{ tag: string }, Det
   }
 
   private playlistService = new PlayListService()
+  private subscription: Subscription
 
   public componentDidMount() {
     this.queryPlayList()
@@ -79,6 +81,10 @@ export default class PlayListDetail extends React.Component<{ tag: string }, Det
     if (prevProps.tag !== this.props.tag) {
       this.queryPlayList()
     }
+  }
+
+  public componentWillUnmount() {
+    if (this.subscription) this.subscription.unsubscribe()
   }
 
   public render() {
@@ -101,12 +107,11 @@ export default class PlayListDetail extends React.Component<{ tag: string }, Det
   }
 
   private queryPlayList() {
-    this.playlistService
+    this.subscription = this.playlistService
       .getPlayListByTag(
         new RequestParams({
           cat: this.props.tag,
-          order: "hot",
-          limit: 12
+          order: "hot"
         })
       )
       .subscribe(data => {

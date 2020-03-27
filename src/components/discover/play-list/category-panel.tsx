@@ -9,6 +9,7 @@ import { ReactComponent as PianoSvg } from "~/assets/icons/piano.svg"
 import { ReactComponent as CoffeeSvg } from "~/assets/icons/coffee.svg"
 import { ReactComponent as SmileSvg } from "~/assets/icons/smile.svg"
 import { ReactComponent as ThemeSvg } from "~/assets/icons/theme.svg"
+import { Subscription } from "rxjs"
 
 const components = {
   Wrapper: styled.div``,
@@ -103,12 +104,18 @@ export default class CategoryPanel extends React.Component<CategoryProp, Categor
     }
   }
 
+  private subscription: Subscription
+
   public componentDidMount() {
-    new PlayListService().getAllTags(new RequestParams()).subscribe(data => {
+    this.subscription = new PlayListService().getAllTags(new RequestParams()).subscribe(data => {
       this.setState({
         resData: data
       })
     })
+  }
+
+  public componentWillUnmount() {
+    if (this.subscription) this.subscription.unsubscribe()
   }
 
   public render() {

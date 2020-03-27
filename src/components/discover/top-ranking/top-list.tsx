@@ -1,24 +1,25 @@
-import React from "react";
-import styled from "styled-components";
-import { RequestParams } from "~/core/http";
-import { Icon } from "antd";
-import { PlayListService } from "~/services/playlist.service";
-import { dateFormat } from "~/shared/utils/common";
-import { RankService } from "~/services/rank.service";
-import { Link } from "react-router-dom";
+import React from "react"
+import styled from "styled-components"
+import { RequestParams } from "~/core/http"
+import { Icon } from "antd"
+import { PlayListService } from "~/services/playlist.service"
+import { dateFormat } from "~/shared/utils/common"
+import { RankService } from "~/services/rank.service"
+import { Link } from "react-router-dom"
+import { Subscription } from "rxjs"
 
 type TopListProp = {
-  id: string;
-  trackUpdateTime: number;
-  coverImgUrl: string;
-  ToplistType?: string;
-};
+  id: string
+  trackUpdateTime: number
+  coverImgUrl: string
+  ToplistType?: string
+}
 
 type TopListState = {
-  detail: any;
-  artists: any;
-  updateDate: number;
-};
+  detail: any
+  artists: any
+  updateDate: number
+}
 
 const components = {
   Wrapper: styled.div`
@@ -121,26 +122,25 @@ const components = {
     font-size: 0.9em;
     margin-left: 5px;
   `
-};
+}
 
-export default class TopList extends React.Component<
-  TopListProp,
-  TopListState
-> {
+export default class TopList extends React.Component<TopListProp, TopListState> {
+  private subscriptions: Subscription[] = []
+
   constructor(props: TopListProp) {
-    super(props);
+    super(props)
     this.state = {
       detail: null,
       artists: null,
       updateDate: props.trackUpdateTime
-    };
+    }
   }
 
   public componentDidMount() {
     if (this.props.ToplistType) {
-      this.queryTrackList();
+      this.queryTrackList()
     } else {
-      this.queryArtistList();
+      this.queryArtistList()
     }
   }
 
@@ -153,20 +153,20 @@ export default class TopList extends React.Component<
           hiddenPlay={!this.props.ToplistType}
         ></RankTitle>
         {this.props.ToplistType ? (
-          <TrackList
-            {...this.state.detail}
-            listType={this.props.ToplistType}
-            id={this.props.id}
-          ></TrackList>
+          <TrackList {...this.state.detail} listType={this.props.ToplistType} id={this.props.id}></TrackList>
         ) : (
           <ArtistsList artists={this.state.artists}></ArtistsList>
         )}
       </components.Wrapper>
-    );
+    )
+  }
+
+  public componentWillUnmount() {
+    this.subscriptions.forEach(x => x.unsubscribe())
   }
 
   private queryTrackList() {
-    new PlayListService()
+    const subscription = new PlayListService()
       .getPlayListDetail(new RequestParams({ id: this.props.id }))
       .subscribe(data => {
         this.setState({
@@ -175,24 +175,26 @@ export default class TopList extends React.Component<
             trackIds: data.playlist.trackIds.slice(0, 8)
           },
           updateDate: data.playlist.updateTime
-        });
-      });
+        })
+      })
+    this.subscriptions.push(subscription)
   }
 
   private queryArtistList() {
-    new RankService().getTopArtists(new RequestParams()).subscribe(data => {
+    const subscription = new RankService().getTopArtists(new RequestParams()).subscribe(data => {
       this.setState({
         artists: data.list.artists.slice(0, 8),
         updateDate: data.updateTime
-      });
-    });
+      })
+    })
+    this.subscriptions.push(subscription)
   }
 }
 
 class RankTitle extends React.Component<{
-  coverImgUrl: string;
-  updateDate: number;
-  hiddenPlay?: boolean;
+  coverImgUrl: string
+  updateDate: number
+  hiddenPlay?: boolean
 }> {
   public render() {
     return (
@@ -210,59 +212,54 @@ class RankTitle extends React.Component<{
         ></div>
         <div className="update-date">{this.updateDateStr}</div>
 
-        {this.props.hiddenPlay ? (
-          <span />
-        ) : (
-          <Icon className="play" type="play-circle" />
-        )}
+        {this.props.hiddenPlay ? <span /> : <Icon className="play" type="play-circle" />}
       </components.Title>
-    );
+    )
   }
 
   private get updateDateStr() {
-    return dateFormat(this.props.updateDate, "MM月dd日") + "更新";
+    return dateFormat(this.props.updateDate, "MM月dd日") + "更新"
   }
 }
 
 class TrackList extends React.Component<{
-  tracks: any[];
-  trackIds: any[];
-  listType: string;
-  id: string;
+  tracks: any[]
+  trackIds: any[]
+  listType: string
+  id: string
 }> {
   public render() {
     if (!this.props.tracks) {
-      return <NoData></NoData>;
+      return <NoData></NoData>
     }
     return (
       <components.Body className="stripe">
         {this.props.tracks.map((item, index) => {
-          let cssName = "status";
-          let status = "-";
-          const trackIdInfo =
-            this.props.trackIds.find(x => x.id === item.id) || {};
-          const atName = item.ar.map(x => x.name).join("/");
+          let cssName = "status"
+          let status = "-"
+          const trackIdInfo = this.props.trackIds.find(x => x.id === item.id) || {}
+          const atName = item.ar.map(x => x.name).join("/")
 
           switch (this.props.listType) {
             case "S":
-              cssName += " small";
-              status = trackIdInfo.ratio + "%";
-              break;
+              cssName += " small"
+              status = trackIdInfo.ratio + "%"
+              break
             case "N":
             case "O":
             case "H":
-              const o_lr = trackIdInfo.lr;
+              const o_lr = trackIdInfo.lr
               if (!o_lr) {
-                status = "new";
-                cssName += " green";
+                status = "new"
+                cssName += " green"
               } else if (o_lr > index) {
-                status = "↑";
-                cssName += " red";
+                status = "↑"
+                cssName += " red"
               } else if (o_lr < index) {
-                status = "↓";
-                cssName += " blue";
+                status = "↓"
+                cssName += " blue"
               }
-              break;
+              break
           }
 
           return (
@@ -274,7 +271,7 @@ class TrackList extends React.Component<{
                 {atName}
               </div>
             </components.TrackItem>
-          );
+          )
         })}
         <components.Footer>
           <Link to={`/detail/song-list/${this.props.id}`} className="link">
@@ -282,27 +279,27 @@ class TrackList extends React.Component<{
           </Link>
         </components.Footer>
       </components.Body>
-    );
+    )
   }
 }
 
 class ArtistsList extends React.Component<{ artists: any[] }> {
   public render() {
     if (!this.props.artists) {
-      return <NoData></NoData>;
+      return <NoData></NoData>
     }
 
     return (
       <components.Body className="stripe">
         {this.props.artists.map((item, index) => {
-          let cssName = "status";
-          let status = "-";
+          let cssName = "status"
+          let status = "-"
           if (item.lastRank < index) {
-            status = "↓";
-            cssName += " blue";
+            status = "↓"
+            cssName += " blue"
           } else if (item.lastRank > index) {
-            status = "↑";
-            cssName += " red";
+            status = "↑"
+            cssName += " red"
           }
           return (
             <components.TrackItem key={index} className="flex-row">
@@ -310,7 +307,7 @@ class ArtistsList extends React.Component<{ artists: any[] }> {
               <div className={cssName}>{status}</div>
               <div>{item.name}</div>
             </components.TrackItem>
-          );
+          )
         })}
         <components.Footer>
           <a href="#" className="link">
@@ -318,16 +315,16 @@ class ArtistsList extends React.Component<{ artists: any[] }> {
           </a>
         </components.Footer>
       </components.Body>
-    );
+    )
   }
 }
 
 function getIndexClassName(index: number) {
-  let name = "index";
-  if (index < 3) name += " index-top";
-  return name;
+  let name = "index"
+  if (index < 3) name += " index-top"
+  return name
 }
 
 function NoData() {
-  return <components.Body>暂无数据</components.Body>;
+  return <components.Body>暂无数据</components.Body>
 }

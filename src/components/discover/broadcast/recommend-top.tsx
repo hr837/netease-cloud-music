@@ -1,17 +1,18 @@
-import React from "react";
-import { DjService } from "~/services/dj.service";
-import { RequestParams } from "~/core/http";
-import styled from "styled-components";
-import { Consumer } from "reto";
-import { RouterStore } from "~/store/router.store";
+import React from "react"
+import { DjService } from "~/services/dj.service"
+import { RequestParams } from "~/core/http"
+import styled from "styled-components"
+import { Consumer } from "reto"
+import { RouterStore } from "~/store/router.store"
+import { Subscription } from "rxjs"
 
 type RecommendTypeState = {
-  items: any;
-};
+  items: any
+}
 
 type RecommendTypeProp = {
-  typeId: string;
-};
+  typeId: string
+}
 
 const components = {
   Wrapper: styled.div`
@@ -48,32 +49,33 @@ const components = {
       font-size: 0.9em;
     }
   `
-};
+}
 
-export default class RecommendType extends React.Component<
-  RecommendTypeProp,
-  RecommendTypeState
-> {
+export default class RecommendType extends React.Component<RecommendTypeProp, RecommendTypeState> {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       items: null
-    };
+    }
   }
 
+  private subscription: Subscription
+
   public componentDidMount() {
-    new DjService()
-      .queryRecommendByType(new RequestParams({ type: this.props.typeId }))
-      .subscribe(data => {
-        this.setState({
-          items: data.djRadios.slice(0, 6)
-        });
-      });
+    new DjService().queryRecommendByType(new RequestParams({ type: this.props.typeId })).subscribe(data => {
+      this.setState({
+        items: data.djRadios.slice(0, 6)
+      })
+    })
+  }
+
+  public componentWillUnmount() {
+    if (this.subscription) this.subscription.unsubscribe()
   }
 
   public render() {
     if (!this.state.items) {
-      return <components.Wrapper />;
+      return <components.Wrapper />
     }
     return (
       <components.Wrapper className="flex-row">
@@ -84,7 +86,7 @@ export default class RecommendType extends React.Component<
                 key={index}
                 className="block"
                 onClick={() => {
-                  routerStore.history.push(`/detail/song-list/${item.id}`);
+                  routerStore.history.push(`/detail/song-list/${item.id}`)
                 }}
               >
                 <div className="pic">
@@ -97,6 +99,6 @@ export default class RecommendType extends React.Component<
           }
         </Consumer>
       </components.Wrapper>
-    );
+    )
   }
 }

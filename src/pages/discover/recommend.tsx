@@ -1,15 +1,17 @@
-import React, { Component } from "react";
-import styled from "styled-components";
-import { Carousel, Icon } from "antd";
-import { BannerService } from "~/services/banner.service";
-import { RequestParams } from "~/core/http";
-import { PersonalizedService } from "~/services/personalized.service";
-import { ReactComponent as CanlendarSvg } from "~/assets/icons/calendar.svg";
-import SongListItem from "~/components/items/songlist-item";
-import PrivateContentItem from "~/components/items/private-content-item";
-import MusicItem from "~/components/items/music-item";
-import MVItem from "~/components/items/mv-item";
-import RadioItem from "~/components/items/radio-item";
+import React, { Component } from "react"
+import styled from "styled-components"
+import { Carousel, Icon } from "antd"
+import { BannerService } from "~/services/banner.service"
+import { RequestParams } from "~/core/http"
+import { PersonalizedService } from "~/services/personalized.service"
+import { ReactComponent as CanlendarSvg } from "~/assets/icons/calendar.svg"
+import SongListItem from "~/components/items/songlist-item"
+import PrivateContentItem from "~/components/items/private-content-item"
+import MusicItem from "~/components/items/music-item"
+import MVItem from "~/components/items/mv-item"
+import RadioItem from "~/components/items/radio-item"
+import { Subscription } from "rxjs"
+
 const components = {
   Wrapper: styled.section`
     .ant-carousel {
@@ -88,24 +90,25 @@ const components = {
     background: red;
     padding: 10px;
   `
-};
+}
 
 interface RecommendState {
-  banners: any[];
-  recommends: any[];
-  privates: any[];
-  songs: any[];
-  mv: any[];
-  radios: any[];
+  banners: any[]
+  recommends: any[]
+  privates: any[]
+  songs: any[]
+  mv: any[]
+  radios: any[]
 }
 
 // 使用通过hooks创建通过component访问的store
 export default class Recommend extends Component<{}, RecommendState> {
-  private bannerService = new BannerService();
-  private personalizedService = new PersonalizedService();
+  private bannerService = new BannerService()
+  private personalizedService = new PersonalizedService()
+  private subscriptions: Subscription[] = []
 
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       banners: [],
       recommends: [],
@@ -113,7 +116,7 @@ export default class Recommend extends Component<{}, RecommendState> {
       songs: [],
       mv: [],
       radios: []
-    };
+    }
   }
 
   public render() {
@@ -126,16 +129,20 @@ export default class Recommend extends Component<{}, RecommendState> {
         {this.getMVContainer()}
         {this.getRadioContainer()}
       </components.Wrapper>
-    );
+    )
   }
 
   public componentDidMount() {
-    this.getBannerList();
-    this.getSongList();
-    this.getPrivateContentList();
-    this.getNewSongs();
-    this.getMVList();
-    this.getRadioList();
+    this.getBannerList()
+    this.getSongList()
+    this.getPrivateContentList()
+    this.getNewSongs()
+    this.getMVList()
+    this.getRadioList()
+  }
+
+  public componentWillUnmount() {
+    this.subscriptions.forEach(x => x.unsubscribe())
   }
 
   /**
@@ -150,7 +157,7 @@ export default class Recommend extends Component<{}, RecommendState> {
           ))}
         </Carousel>
       </div>
-    );
+    )
   }
 
   /**
@@ -170,7 +177,7 @@ export default class Recommend extends Component<{}, RecommendState> {
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   /**
@@ -186,7 +193,7 @@ export default class Recommend extends Component<{}, RecommendState> {
         <div className="item-name">每日歌曲推荐</div>
         <div className="item-play-count"></div>
       </components.TodaySongListItem>
-    );
+    )
   }
 
   /**
@@ -205,7 +212,7 @@ export default class Recommend extends Component<{}, RecommendState> {
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   public getNewSongContainer() {
@@ -217,15 +224,11 @@ export default class Recommend extends Component<{}, RecommendState> {
         </div>
         <div className="container flex-column flex-wrap">
           {this.state.songs.map((item, index) => (
-            <components.MusicItemWrapper
-              key={item.id}
-              data={item}
-              index={index + 1}
-            ></components.MusicItemWrapper>
+            <components.MusicItemWrapper key={item.id} data={item} index={index + 1}></components.MusicItemWrapper>
           ))}
         </div>
       </components.NewMusicContainer>
-    );
+    )
   }
 
   public getMVContainer() {
@@ -241,7 +244,7 @@ export default class Recommend extends Component<{}, RecommendState> {
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   public getRadioContainer() {
@@ -257,27 +260,26 @@ export default class Recommend extends Component<{}, RecommendState> {
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   /**
    * 获取Banner列表
    */
   private getBannerList() {
-    this.bannerService
-      .getBanner(new RequestParams())
-      .subscribe(({ banners }) => {
-        this.setState({
-          banners
-        });
-      });
+    const subscription = this.bannerService.getBanner(new RequestParams()).subscribe(({ banners }) => {
+      this.setState({
+        banners
+      })
+    })
+    this.subscriptions.push(subscription)
   }
 
   /**
    * 获取推荐Songlist列表
    */
   private getSongList() {
-    this.personalizedService
+    const subscription = this.personalizedService
       .getPersonalized(
         new RequestParams({
           limit: 9
@@ -286,50 +288,47 @@ export default class Recommend extends Component<{}, RecommendState> {
       .subscribe(({ result }) => {
         this.setState({
           recommends: result
-        });
-      });
+        })
+      })
+    this.subscriptions.push(subscription)
   }
 
   /**
    * 获取独家放送列表
    */
   public getPrivateContentList() {
-    this.personalizedService
-      .getPrivateContent(new RequestParams())
-      .subscribe(({ result }) => {
-        this.setState({
-          privates: result
-        });
-      });
+    const subscription = this.personalizedService.getPrivateContent(new RequestParams()).subscribe(({ result }) => {
+      this.setState({
+        privates: result
+      })
+    })
+    this.subscriptions.push(subscription)
   }
 
   private getNewSongs() {
-    this.personalizedService
-      .getNewSongList(new RequestParams())
-      .subscribe(({ result }) => {
-        this.setState({
-          songs: result
-        });
-      });
+    const subscription = this.personalizedService.getNewSongList(new RequestParams()).subscribe(({ result }) => {
+      this.setState({
+        songs: result
+      })
+    })
+    this.subscriptions.push(subscription)
   }
 
   private getMVList() {
-    this.personalizedService
-      .getMVList(new RequestParams())
-      .subscribe(({ result }) => {
-        this.setState({
-          mv: result
-        });
-      });
+    const subscription = this.personalizedService.getMVList(new RequestParams()).subscribe(({ result }) => {
+      this.setState({
+        mv: result
+      })
+    })
+    this.subscriptions.push(subscription)
   }
 
   private getRadioList() {
-    this.personalizedService
-      .getRadioList(new RequestParams())
-      .subscribe(({ result }) => {
-        this.setState({
-          radios: result
-        });
-      });
+    const subscription = this.personalizedService.getRadioList(new RequestParams()).subscribe(({ result }) => {
+      this.setState({
+        radios: result
+      })
+    })
+    this.subscriptions.push(subscription)
   }
 }
